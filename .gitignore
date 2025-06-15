@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+
+# Database
+*.sqlite
+*.sqlite3
+
+# CSV files
+*.csv
+
+# PyCharm
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# System files
+.DS_Store
+Thumbs.db
