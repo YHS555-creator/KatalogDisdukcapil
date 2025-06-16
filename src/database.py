@@ -3,6 +3,7 @@ import sqlite3
 import os
 from pathlib import Path
 from datetime import datetime
+from typing import Any
 
 
 class DatabaseHandler:
@@ -68,7 +69,14 @@ class DatabaseHandler:
     def update_location_status(self, book_id, new_status):
         """Update book location status"""
         query = "UPDATE BUKU SET Status_Lokasi = ? WHERE ID_Buku = ?"
-        return self.execute_query(query, (new_status, book_id))
+        try:
+            cur = self.conn.cursor()
+            cur.execute(query, (new_status, book_id))
+            self.conn.commit()
+            return cur.rowcount > 0
+        except sqlite3.Error as e:
+            print(f"Update error: {e}")
+            return False
 
     def log_activity(self, user_id, book_id, action_type, details):
         """Log user activity"""
@@ -80,8 +88,7 @@ class DatabaseHandler:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         return self.execute_query(query, (user_id, book_id, action_type, details, timestamp))
 
-    def authenticate_user(self, username, password):
+    def authenticate_user(self, username: object, password: object) -> dict[Any, Any] | dict[str, Any] | dict[str, str] | dict[bytes, bytes] | None | list[dict[Any, Any] | dict[str, Any] | dict[str, str] | dict[bytes, bytes]]:
         """Authenticate user credentials"""
         query = "SELECT * FROM PENGGUNA WHERE Username = ? AND Password = ?"
-        result = self.execute_query(query, (username, password), fetch_one=True)
-        return result
+        return self.execute_query(query, (username, password), fetch_one=True)

@@ -32,8 +32,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # Load initial data
         self.load_location_tables()
 
-    @staticmethod
-    def configure_table(table):
+    def configure_table(self, table):
         """Configure table settings for consistent behavior"""
         table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         table.setSelectionMode(QTableView.SelectionMode.SingleSelection)
@@ -51,8 +50,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if books_outside is not None:
             self.populate_table(self.Tabel_Dipinjam, books_outside)
 
-    @staticmethod
-    def populate_table(table, books):
+    def populate_table(self, table, books):
         """Populate table with book data"""
         if not books:
             table.setModel(None)
@@ -87,19 +85,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for column in range(10):
             table.resizeColumnToContents(column)
 
-    @staticmethod
-    def get_selected_book_id(table):
+    def get_selected_book_id(self, table):
         """Get selected book ID from a table"""
         if table.model() is None:
             return None
 
         selection_model = table.selectionModel()
-        if selection_model and selection_model.hasSelection():
-            selected_indexes = selection_model.selectedRows(0)  # Get selected row in column 0 (ID_Buku)
-            if selected_indexes:
-                row = selected_indexes[0].row()
-                return table.model().index(row, 0).data()  # Return ID_Buku
-        return None
+        if not selection_model or not selection_model.hasSelection():
+            return None
+
+        selected_rows = selection_model.selectedRows()
+        if not selected_rows:
+            return None
+
+        row = selected_rows[0].row()
+        return table.model().index(row, 0).data()
 
     def search_book(self):
         """Search book by control number and display results"""
@@ -143,8 +143,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.Tabel_Hasil.setModel(None)
             self.Form_Nomor_Kendali.clear()
             QMessageBox.information(self, "Berhasil", "Buku berhasil dipindahkan ke lantai")
-        else:
-            QMessageBox.warning(self, "Gagal", "Gagal memperbarui status buku")
 
     def move_from_floor_to_shelf(self):
         """Move selected book from floor back to shelf"""
@@ -160,8 +158,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             # Refresh tables
             self.load_location_tables()
             QMessageBox.information(self, "Berhasil", "Buku berhasil dikembalikan ke rak")
-        else:
-            QMessageBox.warning(self, "Gagal", "Gagal memperbarui status buku")
 
     def borrow_outside(self):
         """Borrow selected book outside the room"""
@@ -180,23 +176,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.Tabel_Hasil.setModel(None)
             self.Form_Nomor_Kendali.clear()
             QMessageBox.information(self, "Berhasil", "Buku berhasil dipinjam ke luar ruangan")
-        else:
-            QMessageBox.warning(self, "Gagal", "Gagal memperbarui status buku")
 
     def open_admin_login(self):
-        """Open admin login window - FIXED: This shouldn't close the main window"""
-        login_window = LoginWindow(self)
-        login_window.exec()
+        """Close main window and open admin login window"""
+        self.login_window = LoginWindow()
+        self.login_window.show()
+        self.close()
 
 
 class LoginWindow(QDialog, Ui_LoginWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.admin_panel = AdminPanel(self.user)
         self.setupUi(self)
         self.db = DatabaseHandler()
-        self.user = None
         self.Login_Button.clicked.connect(self.authenticate)
+        self.setWindowTitle("Login Admin")
 
     def authenticate(self):
         """Authenticate admin credentials"""
@@ -207,15 +201,15 @@ class LoginWindow(QDialog, Ui_LoginWindow):
             QMessageBox.warning(self, "Input Error", "Username dan password harus diisi")
             return
 
-        self.user = self.db.authenticate_user(username, password)
+        user = self.db.authenticate_user(username, password)
 
-        if self.user and self.user["Role"] == "Admin":
-            # Open admin panel on successful login
+        if user and user["Role"] == "Admin":
+            # Create and show admin panel directly
+            self.admin_panel = AdminPanel(user)
             self.admin_panel.show()
             self.close()
         else:
             QMessageBox.warning(self, "Login Gagal", "Username atau password salah")
-            self.user = None
 
 
 class AdminPanel(QMainWindow, Ui_AdminWindow):
@@ -224,7 +218,6 @@ class AdminPanel(QMainWindow, Ui_AdminWindow):
         self.setupUi(self)
         self.user = user
         self.db = DatabaseHandler()
-        # Add admin functionality here
         self.setWindowTitle("Panel Admin")
         # Add admin functionality here
 
