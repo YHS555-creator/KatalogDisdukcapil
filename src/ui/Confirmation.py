@@ -11,7 +11,7 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 
-class Ui_Dialog(object):
+class  Ui_Dialog(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(170, 68)
