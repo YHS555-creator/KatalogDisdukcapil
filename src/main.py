@@ -146,9 +146,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.information(self, "Berhasil", "Buku berhasil dikembalikan ke rak")
 
     def open_admin_login(self):
-        self.login_window = LoginWindow()
+        self.login_window = LoginWindow(self)
         self.login_window.show()
-        self.close()
 
 
 class LoginWindow(QMainWindow, Ui_LoginWindow):
@@ -161,7 +160,7 @@ class LoginWindow(QMainWindow, Ui_LoginWindow):
         # Configure table for search results
         self.configure_table(self.Tabel_Hasil)
 
-        # Connect signals for search and location operations
+        # Connect signals
         self.Search_Button.clicked.connect(self.search_book)
         self.Pindah_ke_Lantai_Button.clicked.connect(self.move_to_floor)
         self.Pinjam_ke_Luar_Ruangan_Button.clicked.connect(self.borrow_outside)
@@ -169,7 +168,7 @@ class LoginWindow(QMainWindow, Ui_LoginWindow):
         self.Staff_Page_Button.clicked.connect(self.open_staff_page)
 
     def configure_table(self, table):
-        """Configure table settings for consistent behavior"""
+        """Configure table settings"""
         table.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
         table.setSelectionMode(QTableView.SelectionMode.SingleSelection)
         table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -187,7 +186,7 @@ class LoginWindow(QMainWindow, Ui_LoginWindow):
         return table.model().index(rows[0].row(), 0).data()
 
     def search_book(self):
-        """Search book by control number and display results"""
+        """Search book by control number"""
         nomor = self.Form_Nomor_Kendali.toPlainText().strip()
         if not nomor:
             QMessageBox.warning(self, "Peringatan", "Masukkan nomor kendali arsip")
@@ -242,7 +241,7 @@ class LoginWindow(QMainWindow, Ui_LoginWindow):
             QMessageBox.information(self, "Berhasil", "Buku berhasil dipindahkan ke lantai")
 
     def borrow_outside(self):
-        """Borrow selected book outside the room"""
+        """Borrow selected book outside"""
         book_id = self.get_selected_book_id(self.Tabel_Hasil)
         if not book_id:
             QMessageBox.warning(self, "Peringatan", "Pilih buku di Tabel Hasil terlebih dahulu")
@@ -257,11 +256,16 @@ class LoginWindow(QMainWindow, Ui_LoginWindow):
         """Authenticate admin credentials"""
         username = self.Form_Username.text().strip()
         password = self.Form_Password.text().strip()
+
+        # Validate fields are not empty
         if not username or not password:
             QMessageBox.warning(self, "Input Error", "Username dan password harus diisi")
             return
+
+        # Authenticate user
         user = self.db.authenticate_user(username, password)
         if user and user["Role"] == "Admin":
+            # Close login window and open admin panel
             self.admin_panel = AdminPanel(user)
             self.admin_panel.show()
             self.close()
@@ -269,7 +273,7 @@ class LoginWindow(QMainWindow, Ui_LoginWindow):
             QMessageBox.warning(self, "Login Gagal", "Username atau password salah")
 
     def open_staff_page(self):
-        """Open the staff main window"""
+        """Open staff main window"""
         self.main_window = MainWindow()
         self.main_window.show()
         self.close()
@@ -282,7 +286,14 @@ class AdminPanel(QMainWindow, Ui_AdminWindow):
         self.user = user
         self.db = DatabaseHandler()
         self.setWindowTitle("Panel Admin")
+
         # Add admin functionality here
+        # For example:
+        # self.btnAdd.clicked.connect(self.add_book)
+        # self.btnEdit.clicked.connect(self.edit_book)
+        # self.btnDelete.clicked.connect(self.delete_book)
+        # self.btnImport.clicked.connect(self.import_data)
+        # self.btnExport.clicked.connect(self.export_data)
 
 
 class ConfirmationDialog(QDialog, Ui_ConfirmationDialog):
